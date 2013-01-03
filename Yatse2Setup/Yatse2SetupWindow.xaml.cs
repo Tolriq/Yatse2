@@ -135,6 +135,7 @@ namespace Yatse2Setup
             cb_Language.Items.Add("Norwegian");
             cb_Language.Items.Add("Russian");
             cb_Language.Items.Add("Spanish");
+            cb_Language.Items.Add("Croatian");
             cb_Language.SelectedIndex = 0;
 
             if (File.Exists(Helper.AppPath + @"Yatse2.exe "))
