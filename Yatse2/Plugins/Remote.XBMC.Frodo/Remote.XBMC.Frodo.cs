@@ -67,9 +67,7 @@ namespace Remote.XBMC.Frodo
         {
             if (String.IsNullOrEmpty(fileName))
                 return "";
-            var thumbparts = fileName.Split('/');
-            var hash = thumbparts[thumbparts.Length - 1].Trim().Replace(".tbn", "");
-            return hash;
+            return Xbmc.Hash(fileName);
         }
     }
 }
