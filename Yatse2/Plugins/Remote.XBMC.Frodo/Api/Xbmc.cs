@@ -32,6 +32,7 @@ using Jayrock.Json.Conversion;
 using Plugin;
 using Setup;
 using Timer = System.Timers.Timer;
+using System.Web;
 
 namespace Remote.XBMC.Frodo.Api
 {
@@ -142,7 +143,7 @@ namespace Remote.XBMC.Frodo.Api
         public string GetDownloadPath(string fileName)
         {
             if (!_configured) return null;
-            return @"http://" + IP + ":" + Port + "/vfs/" + fileName;
+            return @"http://" + IP + ":" + Port + "/image/" + HttpUtility.UrlEncode(fileName);
         }
 
         public static long StringToNumber (string input)
