@@ -91,7 +91,7 @@ namespace Remote.XBMC.Frodo.Api
                     return;
                 }
                 DownloadImages(downloadFileInfo);
-                Thread.Sleep(75);
+                //Thread.Sleep(75);
             }
             _isDownloading = false;
         }
