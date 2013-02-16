@@ -520,6 +520,7 @@ Global
 		{19A21753-4B07-4118-A1B6-35E14241D71E}.Release X86|Mixed Platforms.Build.0 = Release|Any CPU
 		{19A21753-4B07-4118-A1B6-35E14241D71E}.Release X86|x64.ActiveCfg = Release|Any CPU
 		{19A21753-4B07-4118-A1B6-35E14241D71E}.Release X86|x86.ActiveCfg = Release|Any CPU
+		{19A21753-4B07-4118-A1B6-35E14241D71E}.Release X86|x86.Build.0 = Release|Any CPU
 		{19A21753-4B07-4118-A1B6-35E14241D71E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{19A21753-4B07-4118-A1B6-35E14241D71E}.Release|Any CPU.Build.0 = Release|Any CPU
 		{19A21753-4B07-4118-A1B6-35E14241D71E}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
