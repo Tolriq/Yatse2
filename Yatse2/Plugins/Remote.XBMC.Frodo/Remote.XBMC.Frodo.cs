@@ -29,7 +29,7 @@ namespace Remote.XBMC.Frodo
     {
         public XbmcFrodo()
         {
-            Name = "XBMC - Frodo";
+            Name = "XBMC - Frodo (Beta)";
         }
 
         public int Version

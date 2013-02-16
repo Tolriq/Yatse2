@@ -36,6 +36,42 @@ namespace Remote.XBMC.Frodo.Api
         public Collection<ApiTvSeason> GetTvSeasons()
         {
             var seasons = new Collection<ApiTvSeason>();
+
+            var properties = new JsonArray(new [] { "title" });
+            var param = new JsonObject();
+            param["properties"] = properties;
+            var result = (JsonObject)_parent.JsonCommand("VideoLibrary.GetTVShows", param);
+
+            foreach (JsonObject show in (JsonArray) result["tvshows"])
+            {
+                var properties2 = new JsonArray(new[] { "tvshowid", "fanart", "thumbnail", "season" ,"showtitle" });
+                var param2 = new JsonObject();
+                param2["properties"] = properties2;
+                param2["tvshowid"] = (long)(JsonNumber)show["tvshowid"];
+                var result2 = (JsonObject)_parent.JsonCommand("VideoLibrary.GetSeasons", param2);
+
+                foreach (JsonObject genre in (JsonArray)result2["seasons"])
+                {
+                    // try
+                    {
+                        var tvShow = new ApiTvSeason()
+                        {
+                            SeasonNumber = (long)(JsonNumber)genre["season"],
+                            IdShow = (long)(JsonNumber)genre["tvshowid"],
+                            Show = genre["showtitle"].ToString(),
+                            Thumb = genre["thumbnail"].ToString(),
+                            Fanart = genre["fanart"].ToString(),
+                            Hash = Xbmc.Hash(genre["thumbnail"].ToString())
+                        };
+                        seasons.Add(tvShow);
+                    }
+                    /* catch (Exception)
+                     {
+                     }*/
+                }
+            }
+
+
             const string req = "SELECT idShow, COUNT(idShow), c12, strPath,strTitle FROM episodeview GROUP BY idShow,c12";
 
             var showHashes = new Hashtable();
@@ -82,6 +118,44 @@ namespace Remote.XBMC.Frodo.Api
         {
             var episodes = new Collection<ApiTvEpisode>();
             const string req = "SELECT idEpisode,c00,c01,c03,c05,c10,c12,c13,idFile,strFileName,strPath,playCount,strTitle,strStudio,idShow,mpaa FROM episodeview ";
+
+
+
+            var properties = new JsonArray(new[] { "title", "plot", "season" , "episode" , "showtitle" , "tvshowid", "fanart", "thumbnail" });
+            var param = new JsonObject();
+            param["properties"] = properties;
+            var result = (JsonObject)_parent.JsonCommand("VideoLibrary.GetEpisodes", param);
+
+            foreach (JsonObject genre in (JsonArray)result["episodes"])
+            {
+                // try
+                {
+                    var tvShow = new ApiTvEpisode()
+                    {
+
+                        Title = genre["title"].ToString(),
+                        Plot = genre["plot"].ToString(),
+                        Rating = "",
+                        Mpaa = "",
+                        Studio = "",
+                        IdEpisode = (long)(JsonNumber)genre["episodeid"],
+                        IdShow = (long)(JsonNumber)genre["tvshowid"],
+                        Season = (long)(JsonNumber)genre["season"],
+                        Episode = (long)(JsonNumber)genre["episode"],
+                        Path = "",
+                        ShowTitle = genre["showtitle"].ToString(),
+                        Thumb = genre["thumbnail"].ToString(),
+                        Fanart = genre["fanart"].ToString(),
+                        Hash = Xbmc.Hash(genre["thumbnail"].ToString())
+                    };
+                    episodes.Add(tvShow);
+                }
+                /* catch (Exception)
+                 {
+                 }*/
+            }
+
+
             /*
             var dblines = _parent.DBCommand("video", req);
             if (dblines == null) return episodes;
@@ -135,6 +209,38 @@ namespace Remote.XBMC.Frodo.Api
         public Collection<ApiTvShow> GetTvShows()
         {
             var shows = new Collection<ApiTvShow>();
+
+            var properties = new JsonArray(new [] { "title", "plot", "genre", "fanart", "thumbnail" });
+            var param = new JsonObject();
+            param["properties"] = properties;
+            var result = (JsonObject)_parent.JsonCommand("VideoLibrary.GetTVShows", param);
+
+            foreach (JsonObject genre in (JsonArray)result["tvshows"])
+            {
+                // try
+                {
+                    var tvShow = new ApiTvShow()
+                    {
+
+                        Title = genre["title"].ToString(),
+                        Plot = genre["plot"].ToString(),
+                        Rating = "",
+                        IdScraper = "",
+                        Mpaa = "",
+                        Genre = "",
+                        Studio = "",
+                        IdShow = (long)(JsonNumber)genre["tvshowid"],
+                        Path = "",
+                        Thumb = genre["thumbnail"].ToString(),
+                        Fanart = genre["fanart"].ToString(),
+                        Hash = Xbmc.Hash(genre["thumbnail"].ToString())
+                    };
+                    shows.Add(tvShow);
+                }
+                /* catch (Exception)
+                 {
+                 }*/
+            }
             /* var dblines = _parent.DBCommand("video", "SELECT tvshow.idShow,tvshow.c00,tvshow.c01,tvshow.c04,tvshow.c05,tvshow.c08,tvshow.c12,tvshow.c13,tvshow.c14,path.strPath as strPath,counts.totalcount as totalCount FROM tvshow join tvshowlinkpath on tvshow.idShow=tvshowlinkpath.idShow join path on path.idpath=tvshowlinkpath.idPath left outer join ( select tvshow.idShow as idShow,count(1) as totalcount,count(files.playCount) as watchedcount from tvshow join tvshowlinkepisode on tvshow.idShow = tvshowlinkepisode.idShow join episode on episode.idEpisode = tvshowlinkepisode.idEpisode join files on files.idFile = episode.idFile group by tvshow.idShow) counts on tvshow.idShow = counts.idShow");
              if (dblines == null) return shows;
              foreach (var dbline in dblines)
