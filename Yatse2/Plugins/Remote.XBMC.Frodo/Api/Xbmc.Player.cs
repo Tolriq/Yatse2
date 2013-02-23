@@ -47,13 +47,13 @@ namespace Remote.XBMC.Frodo.Api
                     var result = _parent.MpcHcRemote.GetStatus();
                     var result2 = new ArrayList();
                     MpcHcRemote.ParseCSVFields(result2, result);
-                    var data = (string[]) result2.ToArray(typeof (string));
+                    var data = (string[])result2.ToArray(typeof(string));
                     if (data.Length > 6)
                     {
-                        _nowPlaying.MediaType =  "Video";
+                        _nowPlaying.MediaType = "Video";
                         _nowPlaying.Title = "Media Player Classic";
-                        _nowPlaying.Time = new TimeSpan(0, 0, 0, Convert.ToInt32("0" + data[2])/1000);
-                        _nowPlaying.Duration = new TimeSpan(0, 0, 0, Convert.ToInt32("0" + data[4])/1000);
+                        _nowPlaying.Time = new TimeSpan(0, 0, 0, Convert.ToInt32("0" + data[2]) / 1000);
+                        _nowPlaying.Duration = new TimeSpan(0, 0, 0, Convert.ToInt32("0" + data[4]) / 1000);
                         var percent = Math.Floor(100.0 * Convert.ToInt32("0" + data[2], CultureInfo.InvariantCulture) / Convert.ToInt32("0" + data[4], CultureInfo.InvariantCulture));
                         if (Double.IsNaN(percent))
                             percent = 0;
@@ -74,8 +74,8 @@ namespace Remote.XBMC.Frodo.Api
                     }
 
                     var current = -1;
-                    var players = (JsonArray) _parent.JsonCommand("Player.GetActivePlayers", null);
-                    if (players.Count>0)
+                    var players = (JsonArray)_parent.JsonCommand("Player.GetActivePlayers", null);
+                    if (players.Count > 0)
                     {
                         foreach (JsonObject player in players)
                         {
@@ -92,7 +92,7 @@ namespace Remote.XBMC.Frodo.Api
                         _nowPlaying.Title = "";
                         _nowPlaying.IsPlaying = false;
                         _nowPlaying.IsPaused = false;
-                        return; 
+                        return;
                     }
 
                     var items = new JsonObject();
@@ -133,6 +133,8 @@ namespace Remote.XBMC.Frodo.Api
                                             //"artistid",
                                             //"firstaired",
                                             "tagline",
+                                            "thumbnail",
+                                            "fanart"
                                             //"top250",
                                             //"trailer"
                                         };
@@ -174,9 +176,7 @@ namespace Remote.XBMC.Frodo.Api
                     var total = (JsonObject)result1["totaltime"];
                     _nowPlaying.Time = new TimeSpan(0, Convert.ToInt32("0" + time["hours"]), Convert.ToInt32("0" + time["minutes"]), Convert.ToInt32("0" + time["seconds"]));
                     _nowPlaying.Duration = new TimeSpan(0, Convert.ToInt32("0" + total["hours"]), Convert.ToInt32("0" + total["minutes"]), Convert.ToInt32("0" + total["seconds"]));
-
                     _nowPlaying.Progress = Convert.ToInt32("0" + result1["percentage"].ToString().Split('.')[0]);
-
                     _nowPlaying.Volume = Convert.ToInt32("0" + result3["volume"]);
                     _nowPlaying.IsMuted = (bool)result3["muted"];
 
@@ -184,155 +184,36 @@ namespace Remote.XBMC.Frodo.Api
 
                     _nowPlaying.FileName = result2["file"].ToString();
 
-
                     if (_nowPlaying.MediaType == "audio")
                     {
-                        //infos2 = (JsonObject)_parent.JsonCommand("AudioPlayer.GetTime", null);
                         _nowPlaying.MediaType = "Audio";
-                        _nowPlaying.Genre = result2["genre"].ToString();
+                        _nowPlaying.Genre = _parent.JsonArrayToString((JsonArray)result2["genre"]);
                         _nowPlaying.Title = result2["label"].ToString();
                         _nowPlaying.Year = Convert.ToInt32("0" + result2["year"]);
                         _nowPlaying.Track = Convert.ToInt32("0" + result2["track"]);
-                        _nowPlaying.Artist = result2["artist"].ToString();
+                        _nowPlaying.Artist = _parent.JsonArrayToString((JsonArray)result2["artist"]);
                         _nowPlaying.Album = result2["album"].ToString();
-                        var hash = Xbmc.Hash(_nowPlaying.Album + _nowPlaying.Artist);
-                        _nowPlaying.ThumbURL = @"special://profile/Thumbnails/Music/" + hash[0] + "/" + hash + ".tbn";
-                        _nowPlaying.FanartURL = @"special://profile/Thumbnails/Music/Fanart/" + hash + ".tbn";
+                        _nowPlaying.ThumbURL = result2["thumbnail"].ToString();
+                        _nowPlaying.FanartURL = result2["fanart"].ToString();
                     }
 
                     if (_nowPlaying.MediaType == "video")
                     {
-                        //infos2 = (JsonObject)_parent.JsonCommand("VideoPlayer.GetTime", null);
-                        if (result2["type"].ToString() == "episode")
-                            _nowPlaying.MediaType = "TvShow";
-                        else
-                           _nowPlaying.MediaType = "Movie";
-                        _nowPlaying.Genre = result2["genre"].ToString();
+                        _nowPlaying.MediaType = result2["type"].ToString() == "episode" ? "TvShow" : "Movie";
+                        _nowPlaying.Genre = _parent.JsonArrayToString((JsonArray)result2["genre"]);
                         _nowPlaying.Title = result2["label"].ToString();
                         _nowPlaying.Year = Convert.ToInt32("0" + result2["year"]);
-                        _nowPlaying.SeasonNumber = Convert.ToInt32("0" + result2["season"].ToString().Replace("-",""));
+                        _nowPlaying.SeasonNumber = Convert.ToInt32("0" + result2["season"].ToString().Replace("-", ""));
                         _nowPlaying.EpisodeNumber = Convert.ToInt32("0" + result2["episode"].ToString().Replace("-", ""));
                         _nowPlaying.ShowTitle = result2["showtitle"].ToString();
                         _nowPlaying.Plot = result2["plot"].ToString();
-                        _nowPlaying.Director = result2["director"].ToString();
-                        _nowPlaying.Studio = result2["studio"].ToString();
+                        _nowPlaying.Director = _parent.JsonArrayToString((JsonArray)result2["director"]);
+                        _nowPlaying.Studio = _parent.JsonArrayToString((JsonArray)result2["studio"]);
                         _nowPlaying.Tagline = result2["tagline"].ToString();
                         _nowPlaying.Rating = result2["rating"].ToString();
-                        if (_nowPlaying.FileName.StartsWith("stack://", StringComparison.OrdinalIgnoreCase))
-                        {
-                            var temp = _nowPlaying.FileName.Split(new[] { " , " }, StringSplitOptions.None);
-                            var hash = Xbmc.Hash(temp[0].Replace("stack://", ""));
-                            _nowPlaying.ThumbURL = @"special://profile/Thumbnails/Video/" + hash[0] + "/" + hash + ".tbn";
-                            _nowPlaying.FanartURL = @"special://profile/Thumbnails/Video/Fanart/" + Xbmc.Hash(_nowPlaying.FileName) + ".tbn";
-                        }
-                        else
-                        {
-                            var hash = Xbmc.Hash(_nowPlaying.FileName);
-                            _nowPlaying.ThumbURL = @"special://profile/Thumbnails/Video/" + hash[0] + "/" + hash + ".tbn";
-                            _nowPlaying.FanartURL = @"special://profile/Thumbnails/Video/Fanart/" + hash + ".tbn";
-                        }
+                        _nowPlaying.ThumbURL = result2["thumbnail"].ToString();
+                        _nowPlaying.FanartURL = result2["fanart"].ToString();
                     }
-
-                    //var result = _parent.JsonArrayCommand(new[] { "Player.GetItem", "Player.GetProperties" }, new[] { items, properties });
-
-                    /*if (result != null)
-                        _parent.Log(result.ToString());*/
-                    //return ; 
-                    /*
-                    var infos = (JsonObject)_parent.JsonCommand("System.GetInfoLabels", items);
-
-                    if (infos == null)
-                        return;
-                    JsonObject infos2 = null;
-                    _nowPlaying.FileName = infos["Player.Filenameandpath"].ToString();
-
-                    if (!String.IsNullOrEmpty(infos["VideoPlayer.TVShowTitle"].ToString()))
-                    {
-                        _nowPlaying.MediaType = "TvShow";
-                    }
-                    else if (!String.IsNullOrEmpty(infos["MusicPlayer.Title"].ToString()))
-                    {
-                        _nowPlaying.MediaType = "Audio";
-                    }
-                    else if (!String.IsNullOrEmpty(infos["VideoPlayer.Title"].ToString()))
-                    {
-                        _nowPlaying.MediaType = "Movie";
-                    }
-                    else
-                    {
-                        _nowPlaying.MediaType = "Unknown";
-                        _nowPlaying.Title = "";
-                        _nowPlaying.IsPlaying = false;
-                        _nowPlaying.IsPaused = false;
-                        _nowPlaying.Duration = new TimeSpan();
-                        _nowPlaying.Time = new TimeSpan();
-                    }
-
-                    if (_nowPlaying.MediaType == "Movie" || _nowPlaying.MediaType == "TvShow")
-                    {
-                        infos2 = (JsonObject)_parent.JsonCommand("VideoPlayer.GetTime", null);
-                        _nowPlaying.Genre = infos["VideoPlayer.Genre"].ToString();
-                        _nowPlaying.Title = infos["VideoPlayer.Title"].ToString();
-                        _nowPlaying.Year = Convert.ToInt32("0" + infos["VideoPlayer.Year"]);
-                        _nowPlaying.SeasonNumber = Convert.ToInt32("0" + infos["VideoPlayer.Season"]);
-                        _nowPlaying.EpisodeNumber = Convert.ToInt32("0" + infos["VideoPlayer.Episode"]);
-                        _nowPlaying.ShowTitle = infos["VideoPlayer.TVShowTitle"].ToString();
-                        _nowPlaying.Plot = infos["VideoPlayer.Plot"].ToString();
-                        _nowPlaying.Director = infos["VideoPlayer.Director"].ToString();
-                        _nowPlaying.Studio = infos["VideoPlayer.Studio"].ToString();
-                        _nowPlaying.Tagline = infos["VideoPlayer.Tagline"].ToString();
-                        _nowPlaying.Rating = infos["VideoPlayer.Rating"].ToString();
-                        if (_nowPlaying.FileName.StartsWith("stack://", StringComparison.OrdinalIgnoreCase))
-                        {
-                            var temp = _nowPlaying.FileName.Split(new[] { " , " }, StringSplitOptions.None);
-                            var hash = Xbmc.Hash(temp[0].Replace("stack://", ""));
-                            _nowPlaying.ThumbURL = @"special://profile/Thumbnails/Video/" + hash[0] + "/" + hash + ".tbn";
-                            _nowPlaying.FanartURL = @"special://profile/Thumbnails/Video/Fanart/" + Xbmc.Hash(_nowPlaying.FileName) + ".tbn";
-                        }
-                        else
-                        {
-                            var hash = Xbmc.Hash(_nowPlaying.FileName);
-                            _nowPlaying.ThumbURL = @"special://profile/Thumbnails/Video/" + hash[0] + "/" + hash + ".tbn";
-                            _nowPlaying.FanartURL = @"special://profile/Thumbnails/Video/Fanart/" + hash + ".tbn";
-                        }
-                    }
-                    if (_nowPlaying.MediaType == "Audio")
-                    {
-                        infos2 = (JsonObject)_parent.JsonCommand("AudioPlayer.GetTime", null);
-                        _nowPlaying.Genre = infos["MusicPlayer.Genre"].ToString();
-                        _nowPlaying.Title = infos["MusicPlayer.Title"].ToString();
-                        _nowPlaying.Year = Convert.ToInt32("0" + infos["MusicPlayer.Year"]);
-                        _nowPlaying.Track = Convert.ToInt32("0" + infos["MusicPlayer.TrackNumber"]);
-                        _nowPlaying.Artist = infos["MusicPlayer.Artist"].ToString();
-                        _nowPlaying.Album = infos["MusicPlayer.Album"].ToString();
-                        var hash = Xbmc.Hash(_nowPlaying.Album + _nowPlaying.Artist);
-                        _nowPlaying.ThumbURL = @"special://profile/Thumbnails/Music/" + hash[0] + "/" + hash + ".tbn";
-                        _nowPlaying.FanartURL = @"special://profile/Thumbnails/Music/Fanart/" + hash + ".tbn";
-                    }
-
-                    if (infos2 != null)
-                    {
-                        _nowPlaying.IsPaused = (bool)infos2["paused"];
-                        _nowPlaying.IsPlaying = !(bool)infos2["paused"] && (bool)infos2["playing"];
-                        var time = (JsonObject)infos2["time"];
-                        var total = (JsonObject)infos2["total"];
-                        _nowPlaying.Time = new TimeSpan(0, Convert.ToInt32("0" + time["hours"]), Convert.ToInt32("0" + time["minutes"]), Convert.ToInt32("0" + time["seconds"]));
-                        _nowPlaying.Duration = new TimeSpan(0, Convert.ToInt32("0" + total["hours"]), Convert.ToInt32("0" + total["minutes"]), Convert.ToInt32("0" + total["seconds"]));
-                    }
-
-                    var percent = Math.Floor(100.0 * _nowPlaying.Time.TotalSeconds / _nowPlaying.Duration.TotalSeconds);
-                    if (Double.IsNaN(percent))
-                        percent = 0;
-                    _nowPlaying.Progress = (int)percent;
-
-                    var vol = (1 - Convert.ToDouble("0" + infos["Player.Volume"].ToString().Replace(" dB", "").Replace("-","").Replace(".",","))/60)*100;
-
-                    _nowPlaying.Volume = (int)vol;
-                    _nowPlaying.IsMuted = (vol == 0);
-
-                    _parent.MpcLoaded = _nowPlaying.Duration == new TimeSpan(0, 0, 0, 1);
-
-                    */
                 }
             }
         }
@@ -340,7 +221,7 @@ namespace Remote.XBMC.Frodo.Api
         public ApiCurrently NowPlaying(bool checkNewMedia)
         {
             lock (Locker)
-            { 
+            {
                 if (checkNewMedia)
                 {
                     _nowPlaying.IsNewMedia = false;
@@ -382,7 +263,7 @@ namespace Remote.XBMC.Frodo.Api
                 if (_parent.IsConnected())
                     _parent.AsyncEventAction("PlayerControl(Previous)");
         }
-        
+
         public void SkipNext()
         {
             if (_parent.MpcLoaded)
@@ -410,10 +291,10 @@ namespace Remote.XBMC.Frodo.Api
                             var par = new JsonObject();
                             par["playerid"] = current;
                             par["value"] = progress;
-                            _parent.AsyncJsonCommand("Player.Seek",par);
+                            _parent.AsyncJsonCommand("Player.Seek", par);
                         }
                     }
-                    
+
                     _parent.JsonCommand(
                         _nowPlaying.MediaType == "Audio" ? "AudioPlayer.SeekPercentage" : "VideoPlayer.SeekPercentage",
                         progress);

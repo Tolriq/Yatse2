@@ -28,7 +28,7 @@ namespace Remote.XBMC.Frodo.Api
         private readonly Xbmc _parent;
         private bool _isDownloading;
 
-        private readonly BackgroundWorker _workerDownloads;   
+        private readonly BackgroundWorker _workerDownloads;
 
         public void StopAsync()
         {
@@ -45,7 +45,7 @@ namespace Remote.XBMC.Frodo.Api
 
         public bool AsyncDownloadFinished()
         {
-            return ! _isDownloading;
+            return !_isDownloading;
         }
 
         public void AsyncDownloadImages(ApiImageDownloadInfo[] apiImageDownloadInfos)
@@ -91,7 +91,6 @@ namespace Remote.XBMC.Frodo.Api
                     return;
                 }
                 DownloadImages(downloadFileInfo);
-                //Thread.Sleep(75);
             }
             _isDownloading = false;
         }

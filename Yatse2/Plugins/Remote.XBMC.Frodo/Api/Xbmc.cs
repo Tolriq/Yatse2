@@ -22,7 +22,6 @@ using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Net;
-using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -106,6 +105,7 @@ namespace Remote.XBMC.Frodo.Api
             return res == null ? null : (JsonObject)((JsonObject)res)[label];
         }
 
+/*
         private JsonObject GetSystemProperties(string label)
         {
             var items = new JsonObject();
@@ -113,6 +113,7 @@ namespace Remote.XBMC.Frodo.Api
             var res = JsonCommand("System.GetProperties", items);
             return res == null ? null : (JsonObject)((JsonObject)res)[label];
         }
+*/
 
         public override string GetOS()
         {
@@ -418,6 +419,23 @@ namespace Remote.XBMC.Frodo.Api
             if (retval != null)
                 Trace(retval.ToString());
             return retval;
+        }
+
+        public String JsonArrayToString(JsonArray array)
+        {
+            String result = "";
+            foreach (var item in array)
+            {
+                if (result == "")
+                {
+                    result = item.ToString();
+                }
+                else
+                {
+                    result = result + " / " + item;
+                }
+            }
+            return result;
         }
 
         public Object JsonArrayCommand(string[] cmd, Object[] parameter)

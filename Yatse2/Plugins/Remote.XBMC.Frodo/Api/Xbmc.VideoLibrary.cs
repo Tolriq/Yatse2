@@ -17,7 +17,6 @@
 // ------------------------------------------------------------------------
 
 using System;
-using System.Collections;
 using System.Collections.ObjectModel;
 using Plugin;
 using Jayrock.Json;
@@ -37,172 +36,86 @@ namespace Remote.XBMC.Frodo.Api
         {
             var seasons = new Collection<ApiTvSeason>();
 
-            var properties = new JsonArray(new [] { "title" });
+            var properties = new JsonArray(new[] { "title" });
             var param = new JsonObject();
             param["properties"] = properties;
             var result = (JsonObject)_parent.JsonCommand("VideoLibrary.GetTVShows", param);
-
-            foreach (JsonObject show in (JsonArray) result["tvshows"])
+            if (result != null)
             {
-                var properties2 = new JsonArray(new[] { "tvshowid", "fanart", "thumbnail", "season" ,"showtitle" });
-                var param2 = new JsonObject();
-                param2["properties"] = properties2;
-                param2["tvshowid"] = (long)(JsonNumber)show["tvshowid"];
-                var result2 = (JsonObject)_parent.JsonCommand("VideoLibrary.GetSeasons", param2);
-
-                foreach (JsonObject genre in (JsonArray)result2["seasons"])
+                foreach (JsonObject show in (JsonArray)result["tvshows"])
                 {
-                    // try
+                    var properties2 = new JsonArray(new[] { "tvshowid", "fanart", "thumbnail", "season", "showtitle", "episode" });
+                    var param2 = new JsonObject();
+                    param2["properties"] = properties2;
+                    param2["tvshowid"] = (long)(JsonNumber)show["tvshowid"];
+                    var result2 = (JsonObject)_parent.JsonCommand("VideoLibrary.GetSeasons", param2);
+                    if (result2 == null) continue;
+                    foreach (JsonObject genre in (JsonArray)result2["seasons"])
                     {
-                        var tvShow = new ApiTvSeason()
+                        try
                         {
-                            SeasonNumber = (long)(JsonNumber)genre["season"],
-                            IdShow = (long)(JsonNumber)genre["tvshowid"],
-                            Show = genre["showtitle"].ToString(),
-                            Thumb = genre["thumbnail"].ToString(),
-                            Fanart = genre["fanart"].ToString(),
-                            Hash = Xbmc.Hash(genre["thumbnail"].ToString())
-                        };
-                        seasons.Add(tvShow);
+                            var tvShow = new ApiTvSeason
+                                {
+                                    SeasonNumber = (long)(JsonNumber)genre["season"],
+                                    IdShow = (long)(JsonNumber)genre["tvshowid"],
+                                    Show = genre["showtitle"].ToString(),
+                                    Thumb = genre["thumbnail"].ToString(),
+                                    EpisodeCount = (long)(JsonNumber)genre["episode"],
+                                    Fanart = genre["fanart"].ToString(),
+                                    Hash = Xbmc.Hash(genre["thumbnail"].ToString())
+                                };
+                            seasons.Add(tvShow);
+                        }
+                        catch (Exception)
+                        {
+                        }
                     }
-                    /* catch (Exception)
-                     {
-                     }*/
                 }
             }
-
-
-            const string req = "SELECT idShow, COUNT(idShow), c12, strPath,strTitle FROM episodeview GROUP BY idShow,c12";
-
-            var showHashes = new Hashtable();
-            /*
-            var dblines = _parent.DBCommand("video", req);
-            if (dblines == null) return seasons;
-            foreach (var dbline in dblines)
-            {
-                if (dbline.Length < 4)
-                {
-                    _parent.Log("Invalid request DATA : " + dbline);
-                    continue;
-                }
-                var season = new ApiTvSeason
-                {
-                    EpisodeCount = Xbmc.StringToNumber(dbline[1]),
-                    IdShow = Xbmc.StringToNumber(dbline[0]),
-                    SeasonNumber = Xbmc.StringToNumber(dbline[2]),
-                    Show = dbline[4]
-                };
-
-                var temp = dbline[3];
-                season.Fanart = @"special://profile/Thumbnails/Video/Fanart/" + Xbmc.Hash(temp) + ".tbn";
-                char[] charsToTrim = { '/' };
-                temp = temp.TrimEnd(charsToTrim);
-                var hash = Xbmc.Hash("season" + temp);
-                season.Thumb = @"special://profile/Thumbnails/Video/" + hash[0] + "/" + hash + ".tbn";
-                season.Hash = temp;
-                seasons.Add(season);
-            }
-
-            foreach (var season in seasons)
-            {
-                if (!showHashes.ContainsKey(season.IdShow))
-                {
-                    showHashes.Add(season.IdShow, season.Show);
-                }
-            }
-            */
             return seasons;
         }
 
         public Collection<ApiTvEpisode> GetTvEpisodes()
         {
             var episodes = new Collection<ApiTvEpisode>();
-            const string req = "SELECT idEpisode,c00,c01,c03,c05,c10,c12,c13,idFile,strFileName,strPath,playCount,strTitle,strStudio,idShow,mpaa FROM episodeview ";
 
-
-
-            var properties = new JsonArray(new[] { "title", "plot", "season" , "episode" , "showtitle" , "tvshowid", "fanart", "thumbnail" });
+            var properties = new JsonArray(new[] { "title", "plot", "season", "episode", "showtitle", "tvshowid", "fanart", "thumbnail", "rating", "playcount", "firstaired" });
             var param = new JsonObject();
             param["properties"] = properties;
             var result = (JsonObject)_parent.JsonCommand("VideoLibrary.GetEpisodes", param);
-
-            foreach (JsonObject genre in (JsonArray)result["episodes"])
+            if (result != null)
             {
-                // try
+                foreach (JsonObject genre in (JsonArray)result["episodes"])
                 {
-                    var tvShow = new ApiTvEpisode()
+                    try
                     {
-
-                        Title = genre["title"].ToString(),
-                        Plot = genre["plot"].ToString(),
-                        Rating = "",
-                        Mpaa = "",
-                        Studio = "",
-                        IdEpisode = (long)(JsonNumber)genre["episodeid"],
-                        IdShow = (long)(JsonNumber)genre["tvshowid"],
-                        Season = (long)(JsonNumber)genre["season"],
-                        Episode = (long)(JsonNumber)genre["episode"],
-                        Path = "",
-                        ShowTitle = genre["showtitle"].ToString(),
-                        Thumb = genre["thumbnail"].ToString(),
-                        Fanart = genre["fanart"].ToString(),
-                        Hash = Xbmc.Hash(genre["thumbnail"].ToString())
-                    };
-                    episodes.Add(tvShow);
+                        var tvShow = new ApiTvEpisode
+                            {
+                                Title = genre["title"].ToString(),
+                                Plot = genre["plot"].ToString(),
+                                Rating = genre["rating"].ToString(),
+                                Mpaa = "",
+                                Date = genre["firstaired"].ToString(),
+                                Director = "",
+                                PlayCount = 0,
+                                Studio = "",
+                                IdEpisode = (long)(JsonNumber)genre["episodeid"],
+                                IdShow = (long)(JsonNumber)genre["tvshowid"],
+                                Season = (long)(JsonNumber)genre["season"],
+                                Episode = (long)(JsonNumber)genre["episode"],
+                                Path = "",
+                                ShowTitle = genre["showtitle"].ToString(),
+                                Thumb = genre["thumbnail"].ToString(),
+                                Fanart = genre["fanart"].ToString(),
+                                Hash = Xbmc.Hash(genre["thumbnail"].ToString())
+                            };
+                        episodes.Add(tvShow);
+                    }
+                    catch (Exception)
+                    {
+                    }
                 }
-                /* catch (Exception)
-                 {
-                 }*/
             }
-
-
-            /*
-            var dblines = _parent.DBCommand("video", req);
-            if (dblines == null) return episodes;
-            foreach (var dbline in dblines)
-            {
-                if (dbline.Length < 15)
-                {
-                    _parent.Log("Invalid request DATA : " + dbline);
-                    continue;
-                }
-                dbline[3] = dbline[3].Length > 3 ? dbline[3] : "0.0";
-                var episode = new ApiTvEpisode
-                                  {
-                                      IdEpisode = Xbmc.StringToNumber(dbline[0]),
-                                      Title = dbline[1],
-                                      Plot = dbline[2],
-                                      Rating = dbline[3].Substring(0, 3).Trim('.'),
-                                      Date = dbline[4],
-                                      Director = dbline[5],
-                                      Season = Xbmc.StringToNumber(dbline[6]),
-                                      Episode = Xbmc.StringToNumber(dbline[7]),
-                                      IdFile = Xbmc.StringToNumber(dbline[8]),
-                                      FileName = dbline[9],
-                                      Path = dbline[10],
-                                      PlayCount = Xbmc.StringToNumber(dbline[11]),
-                                      ShowTitle = dbline[12],
-                                      Studio = dbline[13],
-                                      IdShow = Xbmc.StringToNumber(dbline[14]),
-                                      Mpaa = dbline[15]
-                                  };
-                if (episode.FileName.StartsWith("stack://",StringComparison.OrdinalIgnoreCase))
-                {
-                    var temp = episode.FileName.Split(new[] { " , " }, StringSplitOptions.None);
-                    episode.IsStack = 1;
-                    episode.Hash = Xbmc.Hash(temp[0].Replace("stack://", ""));
-                    episode.Thumb = @"special://profile/Thumbnails/Video/" + episode.Hash[0] + "/" + episode.Hash + ".tbn";
-                    episode.Fanart = @"special://profile/Thumbnails/Video/Fanart/" + Xbmc.Hash(episode.Path) + ".tbn";
-                }
-                else
-                {
-                    episode.IsStack = 0;
-                    episode.Hash = Xbmc.Hash(episode.Path + episode.FileName);
-                    episode.Thumb = @"special://profile/Thumbnails/Video/" + episode.Hash[0] + "/" + episode.Hash + ".tbn";
-                    episode.Fanart = @"special://profile/Thumbnails/Video/Fanart/" + Xbmc.Hash(episode.Path) + ".tbn";
-                }
-                episodes.Add(episode);
-            }*/
             return episodes;
         }
 
@@ -210,66 +123,40 @@ namespace Remote.XBMC.Frodo.Api
         {
             var shows = new Collection<ApiTvShow>();
 
-            var properties = new JsonArray(new [] { "title", "plot", "genre", "fanart", "thumbnail" });
+            var properties = new JsonArray(new[] { "title", "plot", "genre", "fanart", "thumbnail", "rating", "mpaa", "studio", "playcount", "premiered", "episode" });
             var param = new JsonObject();
             param["properties"] = properties;
             var result = (JsonObject)_parent.JsonCommand("VideoLibrary.GetTVShows", param);
-
-            foreach (JsonObject genre in (JsonArray)result["tvshows"])
+            if (result != null)
             {
-                // try
+                foreach (JsonObject genre in (JsonArray)result["tvshows"])
                 {
-                    var tvShow = new ApiTvShow()
+                    try
                     {
-
-                        Title = genre["title"].ToString(),
-                        Plot = genre["plot"].ToString(),
-                        Rating = "",
-                        IdScraper = "",
-                        Mpaa = "",
-                        Genre = "",
-                        Studio = "",
-                        IdShow = (long)(JsonNumber)genre["tvshowid"],
-                        Path = "",
-                        Thumb = genre["thumbnail"].ToString(),
-                        Fanart = genre["fanart"].ToString(),
-                        Hash = Xbmc.Hash(genre["thumbnail"].ToString())
-                    };
-                    shows.Add(tvShow);
+                        var tvShow = new ApiTvShow
+                            {
+                                Title = genre["title"].ToString(),
+                                Plot = genre["plot"].ToString(),
+                                Rating = genre["rating"].ToString(),
+                                IdScraper = "",
+                                Mpaa = genre["mpaa"].ToString(),
+                                Genre = _parent.JsonArrayToString((JsonArray)genre["genre"]),
+                                Studio = _parent.JsonArrayToString((JsonArray)genre["studio"]),
+                                IdShow = (long)(JsonNumber)genre["tvshowid"],
+                                TotalCount = (long)(JsonNumber)genre["episode"],
+                                Path = "",
+                                Premiered = genre["premiered"].ToString(),
+                                Thumb = genre["thumbnail"].ToString(),
+                                Fanart = genre["fanart"].ToString(),
+                                Hash = Xbmc.Hash(genre["thumbnail"].ToString())
+                            };
+                        shows.Add(tvShow);
+                    }
+                    catch (Exception)
+                    {
+                    }
                 }
-                /* catch (Exception)
-                 {
-                 }*/
             }
-            /* var dblines = _parent.DBCommand("video", "SELECT tvshow.idShow,tvshow.c00,tvshow.c01,tvshow.c04,tvshow.c05,tvshow.c08,tvshow.c12,tvshow.c13,tvshow.c14,path.strPath as strPath,counts.totalcount as totalCount FROM tvshow join tvshowlinkpath on tvshow.idShow=tvshowlinkpath.idShow join path on path.idpath=tvshowlinkpath.idPath left outer join ( select tvshow.idShow as idShow,count(1) as totalcount,count(files.playCount) as watchedcount from tvshow join tvshowlinkepisode on tvshow.idShow = tvshowlinkepisode.idShow join episode on episode.idEpisode = tvshowlinkepisode.idEpisode join files on files.idFile = episode.idFile group by tvshow.idShow) counts on tvshow.idShow = counts.idShow");
-             if (dblines == null) return shows;
-             foreach (var dbline in dblines)
-             {
-                 if (dbline.Length < 11)
-                 {
-                     _parent.Log("Invalid request DATA : " + dbline);
-                     continue;
-                 }
-                 dbline[3] = dbline[3].Length > 3 ? dbline[3] : "0.0";
-                 var show = new ApiTvShow
-                                {
-                                    IdShow = Xbmc.StringToNumber(dbline[0]),
-                                    Title = dbline[1],
-                                    Plot = dbline[2],
-                                    Rating = dbline[3].Substring(0, 3).Trim('.'),
-                                    Premiered = dbline[4],
-                                    Genre = dbline[5],
-                                    IdScraper = dbline[6],
-                                    Mpaa = dbline[7],
-                                    Studio = dbline[8],
-                                    Path = dbline[9],
-                                    TotalCount = Xbmc.StringToNumber(dbline[10])
-                                };
-                 show.Hash = Xbmc.Hash(show.Path);
-                 show.Thumb = @"special://profile/Thumbnails/Video/" + show.Hash[0] + "/" + show.Hash + ".tbn";
-                 show.Fanart = @"special://profile/Thumbnails/Video/Fanart/" + show.Hash + ".tbn";
-                 shows.Add(show);
-             }*/
             return shows;
         }
 
@@ -277,99 +164,51 @@ namespace Remote.XBMC.Frodo.Api
         {
             var movies = new Collection<ApiMovie>();
 
-            var properties = new JsonArray(new string[6] { "title", "plot", "genre", "year", "fanart", "thumbnail" });
+            var properties = new JsonArray(new[] { "title", "plot", "genre", "year", "fanart", "thumbnail", "playcount", "studio", "rating", "runtime", "mpaa", "originaltitle", "director", "votes" });
             var param = new JsonObject();
             param["properties"] = properties;
             var result = (JsonObject)_parent.JsonCommand("VideoLibrary.GetMovies", param);
-
-            foreach (JsonObject genre in (JsonArray)result["movies"])
+            if (result != null)
             {
-                // try
+                foreach (JsonObject genre in (JsonArray)result["movies"])
                 {
-                    var movie = new ApiMovie
+                    try
                     {
+                        var t = TimeSpan.FromSeconds((long)(JsonNumber)genre["runtime"]);
+                        var duration = string.Format("{0:D2}:{1:D2}", t.Hours, t.Minutes);
+                        var movie = new ApiMovie
+                            {
 
-                        Title = genre["title"].ToString(),
-                        Plot = genre["plot"].ToString(),
-                        Votes = "",
-                        Rating = "",
-                        Year = (long)(JsonNumber)genre["year"],
-                        IdScraper = "",
-                        Length = "",
-                        Mpaa = "",
-                        Genre = "",
-                        Director = "",
-                        OriginalTitle = "",
-                        Studio = "",
-                        IdFile = 0,
-                        IdMovie = (long)(JsonNumber)genre["movieid"],
-                        FileName = "",
-                        Path = "",
-                        PlayCount = 0,
-                        Thumb = genre["thumbnail"].ToString(),
-                        Fanart = genre["fanart"].ToString(),
-                        Hash =  Xbmc.Hash(genre["thumbnail"].ToString())
-                    };
-                    movies.Add(movie);
+                                Title = genre["title"].ToString(),
+                                Plot = genre["plot"].ToString(),
+                                Votes = genre["votes"].ToString(),
+                                Rating = genre["rating"].ToString(),
+                                Year = (long)(JsonNumber)genre["year"],
+                                IdScraper = "",
+                                Length = duration,
+                                Mpaa = genre["mpaa"].ToString(),
+                                Genre = _parent.JsonArrayToString((JsonArray)genre["genre"]),
+                                Director = _parent.JsonArrayToString((JsonArray)genre["director"]),
+                                OriginalTitle = genre["originaltitle"].ToString(),
+                                Studio = _parent.JsonArrayToString((JsonArray)genre["studio"]),
+                                IdFile = 0,
+                                IdMovie = (long)(JsonNumber)genre["movieid"],
+                                FileName = "",
+                                Path = "",
+                                PlayCount = 0,
+                                Thumb = genre["thumbnail"].ToString(),
+                                Fanart = genre["fanart"].ToString(),
+                                Hash = Xbmc.Hash(genre["thumbnail"].ToString())
+                            };
+                        movies.Add(movie);
+                    }
+                    catch (Exception)
+                    {
+                    }
                 }
-                /* catch (Exception)
-                 {
-                 }*/
             }
 
-            /* var dblines = _parent.DBCommand("video","SELECT c00,c01,c03,c04,c05,c07,C09,c11,c12,c14,c15,c16,c18,idFile,idMovie,strFileName,strPath,playCount FROM movieview");
-             if (dblines == null) return movies;
-             foreach (var dbline in dblines)
-             {
-                 if (dbline.Length < 18)
-                 {
-                     _parent.Log("Invalid request DATA : " + dbline);
-                     continue;
-                 }
-                 dbline[4] = dbline[4].Length > 3 ? dbline[4] : "0.0";
-                 var movie = new ApiMovie
-                                 {
-                                     Title = dbline[0],
-                                     Plot = dbline[1],
-                                     Tagline = dbline[2],
-                                     Votes = dbline[3],
-                                     Rating = dbline[4].Substring(0, 3).Trim('.'),
-                                     Year = Xbmc.StringToNumber(dbline[5]),
-                                     IdScraper = dbline[6],
-                                     Length = dbline[7],
-                                     Mpaa = dbline[8],
-                                     Genre = dbline[9],
-                                     Director = dbline[10],
-                                     OriginalTitle = dbline[11],
-                                     Studio = dbline[12],
-                                     IdFile = Xbmc.StringToNumber(dbline[13]),
-                                     IdMovie = Xbmc.StringToNumber(dbline[14]),
-                                     FileName = dbline[15],
-                                     Path = dbline[16],
-                                     PlayCount = Xbmc.StringToNumber(dbline[17])
-                                 };
-
-                 if (movie.FileName.StartsWith("stack://",StringComparison.OrdinalIgnoreCase))
-                 {
-                     var temp = movie.FileName.Split(new[] { " , " }, StringSplitOptions.None);
-                     movie.IsStack = 1;
-                     movie.Hash = Xbmc.Hash(temp[0].Replace("stack://", ""));
-                     movie.Thumb = @"special://profile/Thumbnails/Video/" + movie.Hash[0] + "/" + movie.Hash + ".tbn";
-                     movie.Fanart = @"special://profile/Thumbnails/Video/Fanart/" + Xbmc.Hash(movie.FileName) + ".tbn";
-                 }
-                 else
-                 {
-                     movie.IsStack = 0;
-                     movie.Hash = Xbmc.Hash(movie.Path + movie.FileName);
-                     movie.Thumb = @"special://profile/Thumbnails/Video/" + movie.Hash[0] + "/" + movie.Hash + ".tbn";
-                     movie.Fanart = @"special://profile/Thumbnails/Video/Fanart/" + movie.Hash + ".tbn";
-                 }
-
-                 movies.Add(movie);
-             }*/
             return movies;
         }
-
-
     }
 }

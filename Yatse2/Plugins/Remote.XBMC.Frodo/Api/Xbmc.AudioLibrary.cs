@@ -17,7 +17,6 @@
 // ------------------------------------------------------------------------
 
 using System.Collections.ObjectModel;
-using System.Globalization;
 using Plugin;
 using Jayrock.Json;
 using System;
@@ -37,15 +36,29 @@ namespace Remote.XBMC.Frodo.Api
         {
             var genres = new Collection<ApiAudioGenre>();
 
-            var properties = new JsonArray(new string[2] { "title", "thumbnail" });
+            var properties = new JsonArray(new[] { "title", "thumbnail" });
             var param = new JsonObject();
             param["properties"] = properties;
             var result = (JsonObject)_parent.JsonCommand("AudioLibrary.GetGenres", param);
-
-            foreach (JsonObject genre in (JsonArray)result["genres"])
+            if (result != null)
             {
-                var gen = new ApiAudioGenre { IdGenre = (long)(JsonNumber)genre["genreid"], Name = genre["title"].ToString(), AlbumCount = 0, Thumb = genre["thumbnail"].ToString() };
-                genres.Add(gen);
+                foreach (JsonObject genre in (JsonArray)result["genres"])
+                {
+                    try
+                    {
+                        var gen = new ApiAudioGenre
+                            {
+                                IdGenre = (long)(JsonNumber)genre["genreid"],
+                                Name = genre["title"].ToString(),
+                                AlbumCount = 0,
+                                Thumb = genre["thumbnail"].ToString()
+                            };
+                        genres.Add(gen);
+                    }
+                    catch (Exception)
+                    {
+                    }
+                }
             }
             return genres;
         }
@@ -54,29 +67,30 @@ namespace Remote.XBMC.Frodo.Api
         {
             var artists = new Collection<ApiAudioArtist>();
 
-
-            var properties = new JsonArray(new string[3] { "thumbnail", "fanart", "description" });
+            var properties = new JsonArray(new[] { "thumbnail", "fanart", "description" });
             var param = new JsonObject();
             param["properties"] = properties;
             var result = (JsonObject)_parent.JsonCommand("AudioLibrary.GetArtists", param);
-
-            foreach (JsonObject genre in (JsonArray)result["artists"])
+            if (result != null)
             {
-                // try
+                foreach (JsonObject genre in (JsonArray)result["artists"])
                 {
-                    var artist = new ApiAudioArtist
+                    try
                     {
-                        IdArtist = (long)(JsonNumber)genre["artistid"],
-                        Name = genre["artist"].ToString(),
-                        Thumb = genre["thumbnail"].ToString(),
-                        Fanart = genre["fanart"].ToString(),
-                        Biography = genre["description"].ToString()
-                    };
-                    artists.Add(artist);
+                        var artist = new ApiAudioArtist
+                            {
+                                IdArtist = (long)(JsonNumber)genre["artistid"],
+                                Name = genre["artist"].ToString(),
+                                Thumb = genre["thumbnail"].ToString(),
+                                Fanart = genre["fanart"].ToString(),
+                                Biography = genre["description"].ToString()
+                            };
+                        artists.Add(artist);
+                    }
+                    catch (Exception)
+                    {
+                    }
                 }
-                /* catch (Exception)
-                 {
-                 }*/
             }
             return artists;
         }
@@ -86,33 +100,34 @@ namespace Remote.XBMC.Frodo.Api
         {
             var albums = new Collection<ApiAudioAlbum>();
 
-            var properties = new JsonArray(new string[6] { "title", "thumbnail", "genre", "genreid", "artist", "year" });
+            var properties = new JsonArray(new[] { "title", "thumbnail", "genre", "genreid", "artist", "year" });
             var param = new JsonObject();
             param["properties"] = properties;
             var result = (JsonObject)_parent.JsonCommand("AudioLibrary.GetAlbums", param);
-
-            foreach (JsonObject genre in (JsonArray)result["albums"])
+            if (result != null)
             {
-                // try
+                foreach (JsonObject genre in (JsonArray)result["albums"])
                 {
-                    var album = new ApiAudioAlbum
+                    try
                     {
-                        IdAlbum = (long)(JsonNumber)genre["albumid"],
-                        Title = genre["title"].ToString(),
-                        IdGenre = 0,
-                        IdArtist = 0,
-                        Artist = genre["artist"].ToString(),
-                        Genre = genre["genre"].ToString(),
-                        Year = (long)(JsonNumber)genre["year"],
-                        Thumb = genre["thumbnail"].ToString()
-                    };
-                    albums.Add(album);
+                        var album = new ApiAudioAlbum
+                            {
+                                IdAlbum = (long)(JsonNumber)genre["albumid"],
+                                Title = genre["title"].ToString(),
+                                IdGenre = 0,
+                                IdArtist = 0,
+                                Artist = _parent.JsonArrayToString((JsonArray)genre["artist"]),
+                                Genre = _parent.JsonArrayToString((JsonArray)genre["genre"]),
+                                Year = (long)(JsonNumber)genre["year"],
+                                Thumb = genre["thumbnail"].ToString()
+                            };
+                        albums.Add(album);
+                    }
+                    catch (Exception)
+                    {
+                    }
                 }
-                /* catch (Exception)
-                 {
-                 }*/
             }
-
             return albums;
         }
 
@@ -120,37 +135,39 @@ namespace Remote.XBMC.Frodo.Api
         {
             var songs = new Collection<ApiAudioSong>();
 
-            var properties = new JsonArray(new string[10] { "title", "thumbnail", "genre", "genreid", "artist", "year", "duration", "album", "albumid", "track" });
+            var properties = new JsonArray(new[] { "title", "thumbnail", "genre", "genreid", "artist", "year", "duration", "album", "albumid", "track" });
             var param = new JsonObject();
             param["properties"] = properties;
             var result = (JsonObject)_parent.JsonCommand("AudioLibrary.GetSongs", param);
-
-            foreach (JsonObject genre in (JsonArray)result["songs"])
+            if (result != null)
             {
-                // try
+                foreach (JsonObject genre in (JsonArray)result["songs"])
                 {
-                    var song = new ApiAudioSong
+                    try
                     {
-                        IdSong = (long)(JsonNumber)genre["songid"],
-                        Title = genre["title"].ToString(),
-                        Track = (long)(JsonNumber)genre["track"],
-                        Duration = (long)(JsonNumber)genre["duration"],
-                        Year = (long)(JsonNumber)genre["year"],
-                        FileName = "",
-                        IdAlbum = (long)(JsonNumber)genre["albumid"],
-                        Album = genre["album"].ToString(),
-                        Path = "",
-                        IdArtist = 0,
-                        Artist = genre["artist"].ToString(),
-                        IdGenre = 0,
-                        Genre = "",
-                        Thumb = genre["thumbnail"].ToString(),
-                    };
-                    songs.Add(song);
+                        var song = new ApiAudioSong
+                            {
+                                IdSong = (long)(JsonNumber)genre["songid"],
+                                Title = genre["title"].ToString(),
+                                Track = (long)(JsonNumber)genre["track"],
+                                Duration = (long)(JsonNumber)genre["duration"],
+                                Year = (long)(JsonNumber)genre["year"],
+                                FileName = "",
+                                IdAlbum = (long)(JsonNumber)genre["albumid"],
+                                Album = genre["album"].ToString(),
+                                Path = "",
+                                IdArtist = 0,
+                                Artist = _parent.JsonArrayToString((JsonArray)genre["artist"]),
+                                IdGenre = 0,
+                                Genre = _parent.JsonArrayToString((JsonArray)genre["genre"]),
+                                Thumb = genre["thumbnail"].ToString(),
+                            };
+                        songs.Add(song);
+                    }
+                    catch (Exception)
+                    {
+                    }
                 }
-                /* catch (Exception)
-                 {
-                 }*/
             }
 
             return songs;

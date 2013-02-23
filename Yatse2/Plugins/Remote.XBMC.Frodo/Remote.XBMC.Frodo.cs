@@ -29,7 +29,7 @@ namespace Remote.XBMC.Frodo
     {
         public XbmcFrodo()
         {
-            Name = "XBMC - Frodo (Beta)";
+            Name = "XBMC - Frodo";
         }
 
         public int Version
@@ -45,14 +45,14 @@ namespace Remote.XBMC.Frodo
             return true; // TODO : Real check against supplied version
         }
 
-        public string Name {get;set;}
+        public string Name { get; set; }
 
         public ApiSupportedFunctions SupportedFunctions()
         {
             return new ApiSupportedFunctions
                        {
-                           MovieLibrary = true, 
-                           AudioLibrary = true, 
+                           MovieLibrary = true,
+                           AudioLibrary = true,
                            TvShowLibrary = true,
                            PictureLibrary = true
                        };
@@ -65,9 +65,7 @@ namespace Remote.XBMC.Frodo
 
         public string GetHashFromFileName(string fileName)
         {
-            if (String.IsNullOrEmpty(fileName))
-                return "";
-            return Xbmc.Hash(fileName);
+            return String.IsNullOrEmpty(fileName) ? "" : Xbmc.Hash(fileName);
         }
     }
 }
