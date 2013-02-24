@@ -15,7 +15,7 @@
 //    You should have received a copy of the GNU General Public License
 //    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 -->
-<!--Version:114-->
+<!--Version:124-->
 <ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:S="clr-namespace:System;assembly=mscorlib">
     <S:String x:Key="Localized_1">Filmovi</S:String>
@@ -151,4 +151,11 @@
     <S:String x:Key="Localized_131">Vrijeme</S:String>
     <S:String x:Key="Localized_132">Ostalo</S:String>
     <S:String x:Key="Localized_133">Nadogradi</S:String>
+	<S:String x:Key="Localized_134">Optimiziraj cachirane slike za Yatse rezoluciju</S:String>
+	<S:String x:Key="Localized_135">Aktiviraj Trace mod (usporiti će Yatse)</S:String>
+	<S:String x:Key="Localized_136">Ignoriraj sortiranje tokena (Filmovi/Serije)</S:String>
+	<S:String x:Key="Localized_137">Automatski pokreni sa Windows-ima</S:String>
+	<S:String x:Key="Localized_138">Standardna funkcija sviranja:</S:String>
+	<S:String x:Key="Localized_139">Sviraj</S:String>
+	<S:String x:Key="Localized_140">Random</S:String>
 </ResourceDictionary>
